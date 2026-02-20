@@ -2,6 +2,8 @@
 
 Break the autopilot. A mindful pause before TikTok, Instagram Reels, and YouTube Shorts.
 
+🌐 **Homepage:** [kaichin.dev/short-pause-chrome-extension](https://kaichin.dev/short-pause-chrome-extension)
+
 ## What it does
 
 Every time you open a short video feed, Pause stops you for 5 seconds and asks one question: *is this really what you want to do right now?*
