@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pause</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <div class="header">
+    <div class="wordmark">⏸ Pause</div>
+    <label class="toggle" title="Enable / disable">
+      <input type="checkbox" id="enabled" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="section">
+    <div class="section-label">Today</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-n" id="visits">–</span>
+        <span class="stat-l">visits</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-n green" id="resists">–</span>
+        <span class="stat-l">resists 💪</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-n" id="streak">–</span>
+        <span class="stat-l">streak 🔥</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="section">
+    <div class="section-label">Last 7 days</div>
+    <div class="chart" id="chart"></div>
+  </div>
+
+  <div class="footer">
+    <span class="footer-label">Total resists all time</span>
+    <span class="footer-val" id="total">0</span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

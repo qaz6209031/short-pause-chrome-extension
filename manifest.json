@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Pause",
+  "version": "1.0",
+  "description": "Break the autopilot. Be conscious before you scroll.",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pause"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.tiktok.com/*",
+        "*://www.instagram.com/*",
+        "*://www.youtube.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ]
+}
