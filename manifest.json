@@ -4,9 +4,21 @@
   "version": "1.0",
   "description": "Break the autopilot. Be conscious before you scroll.",
   "permissions": ["storage"],
+  "icons": {
+    "16": "assets/128x128.png",
+    "32": "assets/128x128.png",
+    "48": "assets/128x128.png",
+    "128": "assets/128x128.png"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Pause"
+    "default_title": "Pause",
+    "default_icon": {
+      "16": "assets/128x128.png",
+      "32": "assets/128x128.png",
+      "48": "assets/128x128.png",
+      "128": "assets/128x128.png"
+    }
   },
   "background": {
     "service_worker": "background.js"
