@@ -41,21 +41,19 @@ function renderProgress(resists) {
     resists >= DAILY_GOAL ? '🎉 goal reached!' : `goal: ${DAILY_GOAL}`;
 }
 
-const REASONS_META = {
-  bored:          { label: '😑 Bored' },
-  stressed:       { label: '😤 Stressed' },
-  procrastinating:{ label: '⏳ Procrastinating' },
-  break:          { label: '☕ Taking a break' },
+const PLATFORMS_META = {
+  tiktok:    { label: '🎵 TikTok' },
+  instagram: { label: '📸 Instagram Reels' },
+  youtube:   { label: '▶️ YouTube Shorts' },
 };
 
-function renderReasons(stats) {
-  const container = document.getElementById('reasons-list');
-  // Aggregate all-time reason counts
-  const totals = { bored: 0, stressed: 0, procrastinating: 0, break: 0 };
+function renderPlatforms(stats) {
+  const container = document.getElementById('platforms-list');
+  const totals = { tiktok: 0, instagram: 0, youtube: 0 };
   Object.values(stats).forEach(day => {
-    if (!day.reasons) return;
-    Object.entries(day.reasons).forEach(([r, n]) => {
-      if (totals[r] !== undefined) totals[r] += n;
+    if (!day.platforms) return;
+    Object.entries(day.platforms).forEach(([p, n]) => {
+      if (totals[p] !== undefined) totals[p] += n;
     });
   });
 
@@ -63,11 +61,11 @@ function renderReasons(stats) {
   const hasAny = Object.values(totals).some(n => n > 0);
 
   if (!hasAny) {
-    container.innerHTML = '<div class="reasons-empty">No reason selected yet</div>';
+    container.innerHTML = '<div class="reasons-empty">No blocks recorded yet</div>';
     return;
   }
 
-  container.innerHTML = Object.entries(REASONS_META).map(([key, { label }]) => `
+  container.innerHTML = Object.entries(PLATFORMS_META).map(([key, { label }]) => `
     <div class="reason-row">
       <span class="reason-label">${label}</span>
       <div class="reason-track">
@@ -91,7 +89,7 @@ function render(stats) {
   document.getElementById('total').textContent = total;
 
   renderProgress(ds.resists);
-  renderReasons(stats);
+  renderPlatforms(stats);
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────

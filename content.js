@@ -60,13 +60,15 @@
     );
   }
 
-  function recordEvent(type, reason) {
+  function recordEvent(type, reason, siteKey) {
     getStats().then(stats => {
       const d = today();
-      if (!stats[d]) stats[d] = { visits: 0, resists: 0, reasons: {} };
+      if (!stats[d]) stats[d] = { visits: 0, resists: 0, reasons: {}, platforms: {} };
       if (!stats[d].reasons) stats[d].reasons = {};
+      if (!stats[d].platforms) stats[d].platforms = {};
       stats[d][type]++;
       if (reason) stats[d].reasons[reason] = (stats[d].reasons[reason] || 0) + 1;
+      if (siteKey) stats[d].platforms[siteKey] = (stats[d].platforms[siteKey] || 0) + 1;
       chrome.storage.local.set({ pauseStats: stats });
     });
   }
@@ -361,7 +363,7 @@
     // Let me in
     ppEl.addEventListener('click', () => {
       clearInterval(timer);
-      recordEvent('visits', selectedReason);
+      recordEvent('visits', selectedReason, site.key);
       setCooldown(site.key);
       removeOverlay();
     });
@@ -369,7 +371,7 @@
     // Go back
     shadow.getElementById('pb').addEventListener('click', () => {
       clearInterval(timer);
-      recordEvent('resists', selectedReason);
+      recordEvent('resists', selectedReason, site.key);
       removeOverlay();
       if (history.length > 1) history.back();
       else window.close();
