@@ -41,6 +41,43 @@ function renderProgress(resists) {
     resists >= DAILY_GOAL ? '🎉 goal reached!' : `goal: ${DAILY_GOAL}`;
 }
 
+const REASONS_META = {
+  bored:          { label: '😑 Bored' },
+  stressed:       { label: '😤 Stressed' },
+  procrastinating:{ label: '⏳ Procrastinating' },
+  break:          { label: '☕ Taking a break' },
+};
+
+function renderReasons(stats) {
+  const container = document.getElementById('reasons-list');
+  // Aggregate all-time reason counts
+  const totals = { bored: 0, stressed: 0, procrastinating: 0, break: 0 };
+  Object.values(stats).forEach(day => {
+    if (!day.reasons) return;
+    Object.entries(day.reasons).forEach(([r, n]) => {
+      if (totals[r] !== undefined) totals[r] += n;
+    });
+  });
+
+  const max = Math.max(1, ...Object.values(totals));
+  const hasAny = Object.values(totals).some(n => n > 0);
+
+  if (!hasAny) {
+    container.innerHTML = '<div class="reasons-empty">No reason selected yet</div>';
+    return;
+  }
+
+  container.innerHTML = Object.entries(REASONS_META).map(([key, { label }]) => `
+    <div class="reason-row">
+      <span class="reason-label">${label}</span>
+      <div class="reason-track">
+        <div class="reason-fill" style="width:${Math.round((totals[key] / max) * 100)}%"></div>
+      </div>
+      <span class="reason-count">${totals[key]}</span>
+    </div>
+  `).join('');
+}
+
 function render(stats) {
   const d = today();
   const ds = stats[d] || { visits: 0, resists: 0 };
@@ -54,6 +91,7 @@ function render(stats) {
   document.getElementById('total').textContent = total;
 
   renderProgress(ds.resists);
+  renderReasons(stats);
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────

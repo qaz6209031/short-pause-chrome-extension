@@ -60,11 +60,13 @@
     );
   }
 
-  function recordEvent(type) {
+  function recordEvent(type, reason) {
     getStats().then(stats => {
       const d = today();
-      if (!stats[d]) stats[d] = { visits: 0, resists: 0 };
+      if (!stats[d]) stats[d] = { visits: 0, resists: 0, reasons: {} };
+      if (!stats[d].reasons) stats[d].reasons = {};
       stats[d][type]++;
+      if (reason) stats[d].reasons[reason] = (stats[d].reasons[reason] || 0) + 1;
       chrome.storage.local.set({ pauseStats: stats });
     });
   }
@@ -330,10 +332,12 @@
     (document.documentElement || document.body).appendChild(overlayHost);
 
     // Reason toggle
+    let selectedReason = null;
     shadow.querySelectorAll('.reason').forEach(btn => {
       btn.addEventListener('click', () => {
         shadow.querySelectorAll('.reason').forEach(b => b.classList.remove('on'));
         btn.classList.add('on');
+        selectedReason = btn.dataset.r;
       });
     });
 
@@ -357,7 +361,7 @@
     // Let me in
     ppEl.addEventListener('click', () => {
       clearInterval(timer);
-      recordEvent('visits');
+      recordEvent('visits', selectedReason);
       setCooldown(site.key);
       removeOverlay();
     });
@@ -365,7 +369,7 @@
     // Go back
     shadow.getElementById('pb').addEventListener('click', () => {
       clearInterval(timer);
-      recordEvent('resists');
+      recordEvent('resists', selectedReason);
       removeOverlay();
       if (history.length > 1) history.back();
       else window.close();
