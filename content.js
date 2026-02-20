@@ -55,21 +55,32 @@
 
   // ── Storage ──────────────────────────────────────────────────────────────
   function getStats() {
-    return new Promise(resolve =>
-      chrome.storage.local.get('pauseStats', d => resolve(d.pauseStats || {}))
-    );
+    return new Promise(resolve => {
+      try {
+        chrome.storage.local.get('pauseStats', d => {
+          if (chrome.runtime.lastError) return resolve({});
+          resolve(d.pauseStats || {});
+        });
+      } catch (e) {
+        resolve({});
+      }
+    });
   }
 
   function recordEvent(type, reason, siteKey) {
     getStats().then(stats => {
-      const d = today();
-      if (!stats[d]) stats[d] = { visits: 0, resists: 0, reasons: {}, platforms: {} };
-      if (!stats[d].reasons) stats[d].reasons = {};
-      if (!stats[d].platforms) stats[d].platforms = {};
-      stats[d][type]++;
-      if (reason) stats[d].reasons[reason] = (stats[d].reasons[reason] || 0) + 1;
-      if (siteKey) stats[d].platforms[siteKey] = (stats[d].platforms[siteKey] || 0) + 1;
-      chrome.storage.local.set({ pauseStats: stats });
+      try {
+        const d = today();
+        if (!stats[d]) stats[d] = { visits: 0, resists: 0, reasons: {}, platforms: {} };
+        if (!stats[d].reasons) stats[d].reasons = {};
+        if (!stats[d].platforms) stats[d].platforms = {};
+        stats[d][type]++;
+        if (reason) stats[d].reasons[reason] = (stats[d].reasons[reason] || 0) + 1;
+        if (siteKey) stats[d].platforms[siteKey] = (stats[d].platforms[siteKey] || 0) + 1;
+        chrome.storage.local.set({ pauseStats: stats });
+      } catch (e) {
+        // Extension context invalidated — skip silently
+      }
     });
   }
 
@@ -397,15 +408,20 @@
   }
 
   function checkAndShow() {
-    chrome.storage.local.get('pauseEnabled', data => {
-      if (data.pauseEnabled === false) return;
-      const site = getSite();
-      if (site && !overlayActive && !isInCooldown(site.key)) {
-        showOverlay(site);
-      } else if (!site) {
-        removeOverlay();
-      }
-    });
+    try {
+      chrome.storage.local.get('pauseEnabled', data => {
+        if (chrome.runtime.lastError) return;
+        if (data.pauseEnabled === false) return;
+        const site = getSite();
+        if (site && !overlayActive && !isInCooldown(site.key)) {
+          showOverlay(site);
+        } else if (!site) {
+          removeOverlay();
+        }
+      });
+    } catch (e) {
+      // Extension context invalidated (reloaded while page was open) — bail silently
+    }
   }
 
   // ── Init ─────────────────────────────────────────────────────────────────
