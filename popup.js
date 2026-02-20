@@ -26,60 +26,6 @@ function calcStreak(stats) {
   return streak;
 }
 
-function dayLabel(offset) {
-  const d = new Date();
-  d.setDate(d.getDate() - offset);
-  return offset === 0 ? 'Today' : ['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()];
-}
-
-function renderChart(stats) {
-  const chart = document.getElementById('chart');
-  chart.innerHTML = '';
-
-  // Collect last 7 days of data (oldest → newest)
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().split('T')[0];
-    days.push({ offset: i, key, data: stats[key] || { visits: 0, resists: 0 } });
-  }
-
-  const maxVisits = Math.max(1, ...days.map(d => d.data.visits));
-
-  days.forEach(({ offset, data }) => {
-    const col = document.createElement('div');
-    col.className = 'bar-col';
-
-    const wrap = document.createElement('div');
-    wrap.className = 'bar-wrap';
-
-    // Visits bar (grey, behind)
-    if (data.visits > 0) {
-      const vBar = document.createElement('div');
-      vBar.className = 'bar visits';
-      vBar.style.height = `${Math.round((data.visits / maxVisits) * 44)}px`;
-      wrap.appendChild(vBar);
-    }
-
-    // If no activity, show empty placeholder
-    if (data.visits === 0 && data.resists === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'bar visits';
-      empty.style.height = '3px';
-      empty.style.opacity = '0.3';
-      wrap.appendChild(empty);
-    }
-
-    const label = document.createElement('div');
-    label.className = 'bar-day' + (offset === 0 ? ' today' : '');
-    label.textContent = dayLabel(offset).slice(0, 2);
-
-    col.appendChild(wrap);
-    col.appendChild(label);
-    chart.appendChild(col);
-  });
-}
 
 const DAILY_GOAL = 5;
 
@@ -108,7 +54,6 @@ function render(stats) {
   document.getElementById('total').textContent = total;
 
   renderProgress(ds.resists);
-  renderChart(stats);
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────
