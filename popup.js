@@ -62,14 +62,6 @@ function renderChart(stats) {
       wrap.appendChild(vBar);
     }
 
-    // Resists bar (green, on top)
-    if (data.resists > 0) {
-      const rBar = document.createElement('div');
-      rBar.className = 'bar resists';
-      rBar.style.height = `${Math.round((data.resists / maxVisits) * 44)}px`;
-      wrap.appendChild(rBar);
-    }
-
     // If no activity, show empty placeholder
     if (data.visits === 0 && data.resists === 0) {
       const empty = document.createElement('div');
