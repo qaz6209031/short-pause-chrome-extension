@@ -89,6 +89,20 @@ function renderChart(stats) {
   });
 }
 
+const DAILY_GOAL = 5;
+
+function renderProgress(resists) {
+  const pct = Math.min(100, Math.round((resists / DAILY_GOAL) * 100));
+  // Defer to next frame so CSS transition fires
+  requestAnimationFrame(() => {
+    document.getElementById('progress-bar').style.width = pct + '%';
+  });
+  document.getElementById('progress-text').textContent =
+    resists === 0 ? '0 resists today' : `${resists} resist${resists !== 1 ? 's' : ''} today`;
+  document.getElementById('progress-goal').textContent =
+    resists >= DAILY_GOAL ? '🎉 goal reached!' : `goal: ${DAILY_GOAL}`;
+}
+
 function render(stats) {
   const d = today();
   const ds = stats[d] || { visits: 0, resists: 0 };
@@ -101,6 +115,7 @@ function render(stats) {
   const total = Object.values(stats).reduce((sum, day) => sum + (day.resists || 0), 0);
   document.getElementById('total').textContent = total;
 
+  renderProgress(ds.resists);
   renderChart(stats);
 }
 
