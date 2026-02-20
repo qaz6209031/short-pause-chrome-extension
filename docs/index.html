@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pause — Break the Short Video Autopilot</title>
+  <meta name="description" content="A Chrome extension that adds a mindful pause before TikTok, Instagram Reels, and YouTube Shorts.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #4ade80;
+      --bg: #0a0a0a;
+      --card: #111;
+      --border: rgba(255,255,255,0.07);
+      --text: #e5e5e5;
+      --muted: rgba(255,255,255,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--green); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Nav ──────────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 60px;
+      background: rgba(10,10,10,0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 14px;
+      color: var(--muted);
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: #fff; text-decoration: none; }
+
+    .nav-cta {
+      background: #fff;
+      color: #000 !important;
+      padding: 8px 18px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.15s !important;
+    }
+
+    .nav-cta:hover { background: #e5e5e5 !important; text-decoration: none !important; }
+
+    /* ── Hero ─────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 80px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(74,222,128,0.1);
+      border: 1px solid rgba(74,222,128,0.2);
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 32px;
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 7vw, 80px);
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1.05;
+      max-width: 800px;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 span { color: var(--green); }
+
+    .hero p {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--muted);
+      max-width: 520px;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      color: #000;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 100px;
+      transition: background 0.15s, transform 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: #e5e5e5;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: 100px;
+      transition: all 0.15s;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(255,255,255,0.2);
+      color: #fff;
+      text-decoration: none;
+    }
+
+    /* ── Stats strip ──────────────────────────────────────────────── */
+    .stats-strip {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 40px 24px;
+      flex-wrap: wrap;
+    }
+
+    .strip-stat {
+      flex: 1;
+      min-width: 160px;
+      text-align: center;
+      padding: 0 32px;
+      border-right: 1px solid var(--border);
+    }
+
+    .strip-stat:last-child { border-right: none; }
+
+    .strip-n {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--green);
+      display: block;
+    }
+
+    .strip-l {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Why section ──────────────────────────────────────────────── */
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+
+    .section-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 16px;
+    }
+
+    .section h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .section-intro {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 600px;
+      margin-bottom: 60px;
+      line-height: 1.7;
+    }
+
+    /* ── Reason cards ─────────────────────────────────────────────── */
+    .reasons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .reason-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .reason-card:hover {
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-2px);
+    }
+
+    .reason-icon {
+      font-size: 28px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .reason-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+
+    .reason-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .reason-card .source {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 100px;
+      padding: 3px 10px;
+    }
+
+    /* ── How it works ─────────────────────────────────────────────── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      padding: 28px 32px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .step:last-child { border-bottom: none; }
+    .step:hover { background: rgba(255,255,255,0.02); }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(74,222,128,0.1);
+      border: 1px solid rgba(74,222,128,0.2);
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .step-content h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .step-content p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── CTA section ──────────────────────────────────────────────── */
+    .cta-section {
+      text-align: center;
+      padding: 100px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .cta-section h2 {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      margin-bottom: 16px;
+    }
+
+    .cta-section p {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-logo { font-size: 14px; font-weight: 700; color: #fff; }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer-links a:hover { color: #fff; text-decoration: none; }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .strip-stat { border-right: none; border-bottom: 1px solid var(--border); padding: 20px; }
+      .strip-stat:last-child { border-bottom: none; }
+      footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="nav-logo">⏸ Pause</div>
+    <ul class="nav-links">
+      <li><a href="#why">Why</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="privacy.html">Privacy</a></li>
+      <li><a href="https://github.com/qaz6209031/short-pause-chrome-extension" target="_blank">GitHub</a></li>
+      <li><a href="#install" class="nav-cta">Add to Chrome</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">⏸ Free Chrome Extension</div>
+    <h1>Stop scrolling.<br><span>Start choosing.</span></h1>
+    <p>Pause adds a mindful 5-second screen before TikTok, Instagram Reels, and YouTube Shorts — breaking the autopilot reflex before it starts.</p>
+    <div class="hero-actions">
+      <a href="#install" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Add to Chrome — Free
+      </a>
+      <a href="#why" class="btn-secondary">Why short videos are harmful →</a>
+    </div>
+  </section>
+
+  <!-- Stats strip -->
+  <div class="stats-strip">
+    <div class="strip-stat">
+      <span class="strip-n">73min</span>
+      <span class="strip-l">average daily TikTok usage</span>
+    </div>
+    <div class="strip-stat">
+      <span class="strip-n">1.5B</span>
+      <span class="strip-l">YouTube Shorts daily viewers</span>
+    </div>
+    <div class="strip-stat">
+      <span class="strip-n">8 sec</span>
+      <span class="strip-l">average human attention span today</span>
+    </div>
+    <div class="strip-stat">
+      <span class="strip-n">95%</span>
+      <span class="strip-l">of opens are autopilot, not intentional</span>
+    </div>
+  </div>
+
+  <!-- Why short videos are bad -->
+  <section class="section" id="why">
+    <div class="section-tag">The problem</div>
+    <h2>Short videos are engineered<br>to hijack your brain.</h2>
+    <p class="section-intro">They're not just entertaining — they're specifically designed to be as addictive as possible, with measurable effects on your focus, mood, and mental health.</p>
+
+    <div class="reasons-grid">
+      <div class="reason-card">
+        <span class="reason-icon">🧠</span>
+        <h3>Destroys your attention span</h3>
+        <p>Constant switching between 15–60 second clips trains your brain to expect rapid novelty. Over time, sustained focus on anything — reading, work, conversation — becomes genuinely harder.</p>
+        <span class="source">Neuroscience research, 2023</span>
+      </div>
+
+      <div class="reason-card">
+        <span class="reason-icon">⚡</span>
+        <h3>Dopamine loop addiction</h3>
+        <p>Each new video triggers a small dopamine hit. The algorithm learns exactly what keeps you watching. This creates the same neurological reward loop as slot machines — you never know if the next video will be great.</p>
+        <span class="source">Journal of Behavioral Addictions</span>
+      </div>
+
+      <div class="reason-card">
+        <span class="reason-icon">😔</span>
+        <h3>Linked to anxiety & depression</h3>
+        <p>Studies show heavy short-form video use correlates with higher rates of anxiety, loneliness, and depression — especially in teens. Passive consumption replaces real-world connection and activity.</p>
+        <span class="source">JAMA Pediatrics, 2022</span>
+      </div>
+
+      <div class="reason-card">
+        <span class="reason-icon">😴</span>
+        <h3>Wrecks your sleep</h3>
+        <p>The blue light and constant stimulation from short videos before bed suppresses melatonin and delays sleep onset. The "just one more" loop makes it nearly impossible to stop at a reasonable hour.</p>
+        <span class="source">Sleep Medicine Reviews</span>
+      </div>
+
+      <div class="reason-card">
+        <span class="reason-icon">🕳️</span>
+        <h3>Steals hours invisibly</h3>
+        <p>Unlike a movie or a show, short videos have no natural stopping point. You can open TikTok "for a minute" and lose two hours without any single moment where you consciously decided to keep going.</p>
+        <span class="source">Common Sense Media, 2023</span>
+      </div>
+
+      <div class="reason-card">
+        <span class="reason-icon">📉</span>
+        <h3>Kills deep work & creativity</h3>
+        <p>Frequent context-switching from short content fragments your ability to enter flow states. The mental residue of half-finished videos lingers, reducing the quality of focused work and original thinking.</p>
+        <span class="source">Cal Newport, Deep Work</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section" id="how">
+    <div class="section-tag">How it works</div>
+    <h2>One pause.<br>That's all it takes.</h2>
+    <p class="section-intro">Pause doesn't block anything permanently. It just inserts a moment of consciousness between the impulse and the action.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>You open TikTok, Reels, or Shorts</h3>
+          <p>The extension intercepts the page before the feed loads. You see the pause screen instead of the endless scroll.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Ask yourself why</h3>
+          <p>Tap what's pulling you there — bored, stressed, procrastinating, or taking a break. Just naming it builds self-awareness over time.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Wait 5 seconds</h3>
+          <p>A small countdown runs before "Let me in" activates. This tiny friction breaks the autopilot reflex. Many people close the tab before the 5 seconds are up.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>Choose consciously</h3>
+          <p>Go back or proceed — either way it's now a choice, not a reflex. Every time you resist, your streak grows and a green bar fills up.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="install">
+    <h2>Take back your attention.</h2>
+    <p>Free. No account. Nothing leaves your device.</p>
+    <a href="https://github.com/qaz6209031/short-pause-chrome-extension" class="btn-primary" target="_blank">
+      Add Pause to Chrome — Free
+    </a>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo">⏸ Pause</div>
+    <ul class="footer-links">
+      <li><a href="#why">Why</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="https://github.com/qaz6209031/short-pause-chrome-extension" target="_blank">GitHub</a></li>
+    </ul>
+  </footer>
+
+</body>
+</html>
