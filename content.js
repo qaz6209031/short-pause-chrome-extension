@@ -177,36 +177,28 @@
       line-height: 1.5;
     }
 
-    .section-label {
-      font-size: 11px;
-      font-weight: 600;
+    .fact-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 24px;
+    }
+
+    .fact-label {
+      font-size: 10px;
+      font-weight: 700;
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
-      margin-bottom: 10px;
+      color: #4ade80;
+      margin-bottom: 8px;
     }
 
-    .reasons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 28px;
+    .fact-text {
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.55;
     }
-
-    .reason {
-      padding: 8px 14px;
-      border-radius: 100px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: transparent;
-      color: rgba(255,255,255,0.6);
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.15s;
-      outline: none;
-    }
-
-    .reason:hover { background: rgba(255,255,255,0.07); color: #fff; }
-    .reason.on    { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.3); color: #fff; }
 
     .stats-row {
       display: flex;
@@ -279,6 +271,24 @@
     .btn-proceed.ready:hover { background: #e5e5e5; }
   `;
 
+  // ── Facts ────────────────────────────────────────────────────────────────
+  const FACTS = [
+    "Short videos shrink your attention span. Constant 15–60 second clips train your brain to crave rapid novelty, making sustained focus on anything genuinely harder.",
+    "The algorithm is designed to be infinite. There is no natural stopping point — every scroll is engineered to trigger one more.",
+    "Average TikTok users spend 73 minutes per day on the app. That's 18 full days every year.",
+    "Short video feeds trigger the same dopamine loop as slot machines. You never know if the next video will be great — so you keep going.",
+    "Heavy short-form video use is linked to higher rates of anxiety, loneliness, and depression, especially in people under 25.",
+    "Opening this app right now was likely a reflex, not a choice. Your brain detected a moment of boredom and acted before you decided anything.",
+    "Studies show short video use before bed delays sleep by an average of 30–60 minutes and reduces deep sleep quality.",
+    "Frequent context-switching from short content fragments your ability to enter flow states — the mental mode where your best work happens.",
+    "The average person checks short video apps 15+ times per day. Most sessions were never consciously decided.",
+    "You can't remember most of what you watch. Short videos feel stimulating but leave almost no lasting value or memory.",
+  ];
+
+  function randomFact() {
+    return FACTS[Math.floor(Math.random() * FACTS.length)];
+  }
+
   // ── Build overlay HTML ───────────────────────────────────────────────────
   function buildHTML(site, stats) {
     const d = today();
@@ -297,12 +307,9 @@
         </div>
         <p class="subtitle">Is this really what you want to do right now?</p>
 
-        <div class="section-label">What's pulling you here?</div>
-        <div class="reasons">
-          <button class="reason" data-r="bored">😑 Bored</button>
-          <button class="reason" data-r="stressed">😤 Stressed</button>
-          <button class="reason" data-r="procrastinating">⏳ Procrastinating</button>
-          <button class="reason" data-r="break">☕ Taking a break</button>
+        <div class="fact-card">
+          <div class="fact-label">Did you know?</div>
+          <div class="fact-text">${randomFact()}</div>
         </div>
 
         <div class="stats-row">
@@ -344,16 +351,6 @@
 
     (document.documentElement || document.body).appendChild(overlayHost);
 
-    // Reason toggle
-    let selectedReason = null;
-    shadow.querySelectorAll('.reason').forEach(btn => {
-      btn.addEventListener('click', () => {
-        shadow.querySelectorAll('.reason').forEach(b => b.classList.remove('on'));
-        btn.classList.add('on');
-        selectedReason = btn.dataset.r;
-      });
-    });
-
     // Countdown
     let secs = COUNTDOWN_SECS;
     const pcEl = shadow.getElementById('pc');
@@ -374,7 +371,7 @@
     // Let me in
     ppEl.addEventListener('click', () => {
       clearInterval(timer);
-      recordEvent('visits', selectedReason, site.key);
+      recordEvent('visits', null, site.key);
       setCooldown(site.key);
       removeOverlay();
     });
@@ -382,7 +379,7 @@
     // Go back
     shadow.getElementById('pb').addEventListener('click', () => {
       clearInterval(timer);
-      recordEvent('resists', selectedReason, site.key);
+      recordEvent('resists', null, site.key);
       removeOverlay();
       if (history.length > 1) history.back();
       else window.close();
